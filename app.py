@@ -7,6 +7,9 @@ import plotly.graph_objects as go
 from numpy import log, sqrt, exp 
 import matplotlib.pyplot as plt
 import seaborn as sns
+import requests
+import sys
+
 
     # Heat Map Function
 def plot_heatmap(bs_model, spot_range, vol_range, strike):
@@ -153,9 +156,9 @@ with st.sidebar:
         interest_rate = 0.05
 
         # Placeholder for real-time data retrieval w/ stock ticker input
-        st.text_input("Enter Stock Ticker", placeholder="e.g., AAPL, TSLA, BTC-USD")
+        st.text_input("Stock Ticker", placeholder="e.g., AAPL, TSLA, BTC-USD")
     # Display current inputs
-    
+
 
 
     st.markdown("-----")
