@@ -1,4 +1,7 @@
 from BSfunctions import BlackScholes
+#from producer import StockProducer
+#from keys import alpha_vantage_api_key
+from stockScraper import StockScraper
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -7,82 +10,7 @@ import plotly.graph_objects as go
 from numpy import log, sqrt, exp 
 import matplotlib.pyplot as plt
 import seaborn as sns
-import requests
-import sys
-
-
-    # Heat Map Function
-def plot_heatmap(bs_model, spot_range, vol_range, strike):
-        call_prices = np.zeros((len(vol_range), len(spot_range)))
-        put_prices = np.zeros((len(vol_range), len(spot_range)))
-        
-        for i, vol in enumerate(vol_range):
-            for j, spot in enumerate(spot_range):
-                bs_temp = BlackScholes(
-                    time_to_maturity=bs_model.time_to_maturity,
-                    strike=strike,
-                    current_price=spot,
-                    volatility=vol,
-                    interest_rate=bs_model.interest_rate
-                )
-                bs_temp.calculate_prices()
-                call_prices[i, j] = bs_temp.call_price
-                put_prices[i, j] = bs_temp.put_price
-        
-        # Plotting Call Price Heatmap
-        fig_call, ax_call = plt.subplots(figsize=(10, 8))
-
-        vcall = np.abs(call_price).max()
-
-        sns.heatmap(call_prices, xticklabels=np.round(spot_range, 2), vmin = -vcall, vmax = vcall, yticklabels=np.round(vol_range, 2), annot=True, fmt=".2f", cmap="RdYlGn", ax=ax_call)
-        ax_call.set_xlabel('Spot Price')
-        ax_call.set_ylabel('Volatility')
-        
-        # Plotting Put Price Heatmap
-
-        vput = np.abs(put_prices).max()
-        fig_put, ax_put = plt.subplots(figsize=(10, 8))
-        sns.heatmap(put_prices, xticklabels=np.round(spot_range, 2), vmin = -vput, vmax = vput, yticklabels=np.round(vol_range, 2), annot=True, fmt=".2f", cmap="RdYlGn", ax=ax_put)
-        ax_put.set_xlabel('Spot Price')
-        ax_put.set_ylabel('Volatility')
-        
-        return fig_call, fig_put
-
-def pnl_heatmap(current_price, strike, time_to_expiry, volatility, interest_rate, C_buy, P_buy, spot_range, vol_range):
-    pnl_matrix = np.zeros((len(vol_range), len(spot_range)))
-    for i, vol in enumerate(vol_range):
-        for j, spot in enumerate(spot_range):
-            bs_temp = BlackScholes(
-                time_to_maturity=time_to_expiry,
-                strike=strike,
-                current_price=spot,
-                volatility=vol,
-                interest_rate=interest_rate
-            )
-            call_price, put_price = bs_temp.calculate_prices()
-            # P&L = (option value - purchase price)
-            pnl = (call_price - C_buy) + (put_price - P_buy)
-            pnl_matrix[i, j] = pnl
-
-    fig, ax = plt.subplots(figsize=(10, 8))
-    v = np.abs(pnl_matrix).max()
-    sns.heatmap(
-        pnl_matrix,
-        xticklabels=np.round(spot_range, 2),
-        yticklabels=np.round(vol_range, 2),
-        vmin= -v,
-        vmax= v,
-        annot=True,
-        fmt=".2f",
-        cmap="RdYlGn",
-        center=0,
-        ax=ax
-    )
-    ax.invert_yaxis()
-    ax.set_title('P&L Heatmap (Call + Put)') 
-    ax.set_xlabel('Spot Price')
-    ax.set_ylabel('Volatility')
-    return fig
+import datetime
 
 
 # Title of the app
@@ -91,6 +19,7 @@ st.set_page_config(
     page_icon="😹",
     layout="wide",
     initial_sidebar_state="expanded")
+    # Heat Map Function
 
 # Custom CSS for styling the CALL and PUT values
 st.markdown("""
@@ -135,66 +64,137 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# BS Default Values
+C_buy = 0.0
+P_buy = 0.0 
+current_price = 100.0
+strike = 100.0
+time_to_maturity = 1.0
+volatility = 0.2
+interest_rate = 0.0
+call_price = 0.0
+put_price = 0.0
+# Create an instance of the BlackScholes class with default values
+bs_model = BlackScholes(
+                time_to_maturity = time_to_maturity,
+                strike = strike,
+                current_price = current_price,
+                volatility = volatility,
+                interest_rate = interest_rate,
+                C_buy = C_buy,
+                P_buy = P_buy,
+                call_price = call_price,
+                put_price = put_price)
 
 # Sidebar for User Inputs
 with st.sidebar:
-    st.title("Black-Scholes Model")
-    st.markdown("-----")
+    st.title("Black-Scholes Dashboard")
+    linkedin_url = "linkedin.com/in/tylerle-uf"
+    st.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decoration: none; color: inherit;"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="25" height="25" style="vertical-align: middle; margin-right: 10px;">`Le, Tyler`</a>', unsafe_allow_html=True)
 
-    if st.toggle("Manual Inputs", value=False):
+    st.markdown("-----")
+        
+    manualInput = st.toggle("Stock Ticker Input", value=True)
+    if manualInput:
+        
+        st.header("Real-time Data Inputs")
+
+        ticker_symbol = st.text_input("Stock Ticker", placeholder="e.g., AAPL, TSLA, BTC-USD")
+        producer = StockScraper(ticker_symbol)
+
+
+        # Strike Price - Prompt user (enabled only if price is available)
+        strike = st.number_input(
+            "Strike Price",
+            min_value=0.0,
+            value= 100.0,
+            disabled=(current_price is None)
+        )
+
+        # Time to Expiry - Date picker (enabled only if price is available)
+        expiry_date = st.date_input(
+            "Time to Expiry",
+            value=datetime.date.today(),
+            disabled=(current_price is None)
+        )
+        time_to_expiry = producer.calculate_time_to_maturity(str(expiry_date)) if current_price else 1.0
+
+        # Volatility - Historical volatility (enabled only if price is available)
+        volatility = st.number_input("Volatility",   min_value=0.0, value=0.2)
+
+        # Interest Rate
+        interest_rate = st.number_input("Risk-free Interest Rate", value=0.05, step=0.01)
+
+        
+
+        # Placeholder for real-time data retrieval w/ stock ticker input
+    else:
         current_price     = st.number_input("Current/Underlying Price (S)", min_value=0.0, value=100.0)
         strike     = st.number_input("Strike Price", min_value = 0.0, value=100.0)
         time_to_expiry     = st.number_input("Time to Expiry", min_value=0.0, value=1.0)
         volatility = st.number_input("Volatility",   min_value=0.0, value=0.2)
         interest_rate     = st.number_input("Risk-free Interest Rate", value=0.05)
-    else:
-        # Placeholder for real-time data inputs
-        current_price = 100.0
-        strike = 100.0
-        time_to_expiry = 1.0
-        volatility = 0.2
-        interest_rate = 0.05
 
-        # Placeholder for real-time data retrieval w/ stock ticker input
-        st.text_input("Stock Ticker", placeholder="e.g., AAPL, TSLA, BTC-USD")
-    # Display current inputs
-
-
-
+    # Calculate Call and Put Values
+    callput_button = st.button("Calculate")
+    
+        
     st.markdown("-----")
-
     st.header("Heatmap Parameters")
-    # Toggle for P&L Graph
+        # Toggle for P&L Graph
     PL_toggle_on = st.toggle("P/L Graph", value=False)
-    # Utilize real time data (pending)
+        # Utilize real time data (pending)
     if PL_toggle_on:
-        C_buy = st.sidebar.number_input("Purchase Price of Call", min_value=0.0, value=5.0, step=0.1)
-        P_buy = st.sidebar.number_input("Purchase Price of Put",  min_value=0.0, value=3.0, step=0.1)
+            C_buy = st.sidebar.number_input("Purchase Price of Call", min_value=0.0, value=5.0, step=0.1)
+            P_buy = st.sidebar.number_input("Purchase Price of Put",  min_value=0.0, value=3.0, step=0.1)
 
-    
-   # calculate_btn = st.button('Heatmap Parameters')
-    spot_min = st.number_input('Min Spot Price', min_value=0.01, value=current_price*0.8, step=0.01)
-    spot_max = st.number_input('Max Spot Price', min_value=0.01, value=current_price*1.2, step=0.01)
-    vol_min = st.slider('Min Volatility for Heatmap', min_value=0.01, max_value=1.0, value=volatility*0.5, step=0.01)
-    vol_max = st.slider('Max Volatility for Heatmap', min_value=0.01, max_value=1.0, value=volatility*1.5, step=0.01)
-    
+        
+    # calculate_btn = st.button('Heatmap Parameters')
+    spot_min = st.number_input('Min Spot Price', min_value=0.01, value=current_price*0.8, step=0.01, )
+    spot_max = st.number_input('Max Spot Price', min_value=0.01, value=current_price*1.2, step=0.01,)
+    vol_min = st.slider('Min Volatility for Heatmap', min_value=0.01, max_value=1.0, value=volatility*0.5, step=0.01,)
+    vol_max = st.slider('Max Volatility for Heatmap', min_value=0.01, max_value=1.0, value=volatility*1.5, step=0.01,)
+        
     spot_range = np.linspace(spot_min, spot_max, 10)
     vol_range = np.linspace(vol_min, vol_max, 10)
+
 
 # Main Page for Output
 
 st.title("Black-Scholes Pricing Model")
+if callput_button:
+    if ticker_symbol:
+        try:
+            current_price = producer.get_spot_price()
+            if current_price is None or np.isnan(current_price):
+                error_msg = "Could not fetch price for this ticker."
+        except Exception as e:
+                error_msg = f"Error fetching price: {e}"
+                print(error_msg)
+                
+    bs_model = BlackScholes(
+                time_to_maturity = time_to_maturity,
+                strike = strike,
+                current_price = current_price,
+                volatility = volatility,
+                interest_rate = interest_rate,
+                C_buy = C_buy,
+                P_buy = P_buy,
+                call_price = call_price,
+                put_price = put_price)
 
-# Table of Inputs (not needed for now)
 
-# Calculate Call and Put Values
-bs_model = BlackScholes(
-    time_to_maturity=time_to_expiry,
-    strike=strike,
-    current_price=current_price,
-    volatility=volatility,
-    interest_rate=interest_rate
-)
+# Table of Inputs
+input_data = {
+    "Current Asset Price": [current_price],
+    "Strike Price": [strike],
+    "Time to Maturity (Years)": [time_to_maturity],
+    "Volatility (σ)": [volatility],
+    "Risk-Free Interest Rate": [interest_rate],
+}
+input_df = pd.DataFrame(input_data)
+st.table(input_df)
+
 call_price, put_price = bs_model.calculate_prices()
 
 # Display Call and Put Prices
@@ -227,24 +227,24 @@ st.markdown("")
 
     # Generate Heatmap
 if PL_toggle_on:
-    pnl_heatmap_fig = pnl_heatmap(
-        current_price=current_price,
-        strike=strike,
-        time_to_expiry=time_to_expiry,           
-        volatility=volatility,
-        interest_rate=interest_rate,
-        C_buy=C_buy,
-        P_buy=P_buy,
-        spot_range=spot_range,
-        vol_range=vol_range
-    )
+    callpnl_heatmap_fig = bs_model.call_pnl_heatmap()
+    putpnl_heatmap_fig = bs_model.put_pnl_heatmap()
+
+    pnl_3d_intsurface_fig = bs_model.pnl_3d_interactive_surface()
+
+    st.subheader("3D Price Heatmap")
+    st.plotly_chart(pnl_3d_intsurface_fig, use_container_width=True)
+    """
     with col1:
-        st.subheader("P&L Heatmap (Call + Put)")
-        st.pyplot(pnl_heatmap_fig)
-
+        st.subheader("P&L Heatmap (CALL)")
+        st.pyplot(callpnl_heatmap_fig)
+    with col2:
+        st.subheader("P&L Heatmap (PUT)")
+        st.pyplot(putpnl_heatmap_fig)
+"""
 else:
-    fig_call, fig_put = plot_heatmap(bs_model, spot_range, vol_range, strike)
-
+    fig_call, fig_put = bs_model.plot_heatmap()
+    
     with col1:
         st.subheader("Call Price Heatmap")
         st.pyplot(fig_call)
@@ -252,9 +252,12 @@ else:
     with col2:
         st.subheader("Put Price Heatmap")
         st.pyplot(fig_put)
-        
+      
+# 3D Surface Plot for P&L  
 
 # real market data -> use an API and populate underlying price
 # Implied Volatility solver | Input market option price -> solve for implied volatility -> plot implied vol curve for a range of strikes
 # Greek Calculations | Plot Delta HeatMap or Vega Heatmap
 
+# Clear All
+# Back
