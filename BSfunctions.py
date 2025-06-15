@@ -31,6 +31,7 @@ class BlackScholes:
         self.vol_range = vol_range
         self.spot_range = spot_range
         self.P_buy = P_buy
+        self.C_buy = C_buy
         self.call_price = call_price
         self.put_price = put_price
 
