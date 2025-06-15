@@ -124,8 +124,7 @@ with st.sidebar:
 
         # Interest Rate
         interest_rate = st.number_input("Risk-free Interest Rate", value=0.05, step=0.01)
-        # Calculate Call and Put Values
-        callput_button = st.button("Calculate")
+
         
 
         # Placeholder for real-time data retrieval w/ stock ticker input
@@ -136,7 +135,8 @@ with st.sidebar:
         volatility = st.number_input("Volatility",   min_value=0.0, value=0.2)
         interest_rate     = st.number_input("Risk-free Interest Rate", value=0.05)
 
-
+    # Calculate Call and Put Values
+    callput_button = st.button("Calculate")
     
         
     st.markdown("-----")
