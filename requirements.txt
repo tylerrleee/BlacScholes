@@ -8,3 +8,8 @@ matplotlib
 seaborn
 requests
 mysql-connector-python
+BeautifulSoup
+selenium
+time
+random
+datetime
