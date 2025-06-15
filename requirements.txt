@@ -8,7 +8,7 @@ matplotlib
 seaborn
 requests
 mysql-connector-python
-bs4
+beautifulsoup4
 selenium
 time
 random
