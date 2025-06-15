@@ -1,5 +1,5 @@
-# Black-Scholes Options Pricing Dashboard
-An interactive dashboard that visualizes Call and Put option prices using the Black-Scholes Pricing Model. This tool allows users, whether students, traders, or curious learners, to explore how changes in market conditions affect option valuations.
+# Black-Scholes Options Pricing Dashboard (In-progress as of 06/15/2025)
+An interactive dashboard that visualizes Call and Put option prices using the Black-Scholes Pricing Model. This tool allows users to explore how changes in market conditions affect option valuations.
 
 [Live App](tleblackschole.streamlit.app)
 
