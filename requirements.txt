@@ -1,0 +1,11 @@
+streamlit
+numpy
+scipy.stats
+scipy
+streamlit
+pandas
+plotly
+matplotlib
+seaborn
+requests
+mysql-connector-python
