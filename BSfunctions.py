@@ -91,6 +91,8 @@ class BlackScholes:
         sns.heatmap(call_prices, xticklabels=np.round(self.spot_range, 2), vmin=-vcall, vmax=vcall, yticklabels=np.round(self.vol_range, 2), annot=True, fmt=".2f", cmap="RdYlGn", ax=ax_call)
         ax_call.set_xlabel('Spot Price')
         ax_call.set_ylabel('Volatility')
+        ax_call.set_title('CALL')
+
         
         # Plotting Put Price Heatmap
         vput = np.abs(put_prices).max()
@@ -98,7 +100,9 @@ class BlackScholes:
         sns.heatmap(put_prices, xticklabels=np.round(self.spot_range, 2), vmin=-vput, vmax=vput, yticklabels=np.round(self.vol_range, 2), annot=True, fmt=".2f", cmap="RdYlGn", ax=ax_put)
         ax_put.set_xlabel('Spot Price')
         ax_put.set_ylabel('Volatility')
-        
+        ax_put.set_title('PUT')
+
+    
         return fig_call, fig_put
 
     def calculate_pnl(self):
@@ -274,7 +278,7 @@ class BlackScholes:
         fig = plt.figure(figsize=(10, 8))        
         ax = fig.add_subplot(111, projection = '3d')
         surf = ax.plot_surface(X, Y, delta_matrix, cmap='RdYlGn', edgecolor='k', alpha=1)
-        ax.set_title('3D DELTA Surface Plot')
+        #ax.set_title('3D DELTA Surface Plot')
         ax.set_xlabel('Spot Price')
         ax.set_ylabel('Volatility')
         ax.set_zlabel('DELTA')
@@ -314,5 +318,45 @@ class BlackScholes:
             width=1000,
             height=800
         )
+        return fig
+    
+    def gamma(self):
+        d1 = (
+            log(self.current_price / self.strike) +
+            (self.interest_rate + 0.5 * self.volatility ** 2) * self.time_to_maturity
+            ) / (
+                self.volatility * sqrt(self.time_to_maturity)
+            )
+        self.call_gamma = norm.pdf(d1) / (
+            self.strike * self.volatility * sqrt(self.time_to_maturity)
+        )
+        self.put_gamma = self.call_gamma
+        return self.call_gamma, self.put_gamma
+
+    def gamma_3d_surface(self):
+        gamma_matrix = np.zeros((len(self.vol_range), len(self.spot_range)))
+        for i, vol in enumerate(self.vol_range):
+            for j, spot in enumerate(self.spot_range):
+                bs_temp = BlackScholes(
+                    time_to_maturity=self.time_to_maturity,
+                    strike=self.strike,
+                    current_price=spot,
+                    volatility=vol,
+                    interest_rate=self.interest_rate,
+                    C_buy=self.C_buy,
+                    P_buy=self.P_buy
+                )
+                call_gamma, put_gamma = bs_temp.gamma()
+                gamma_matrix[i, j] = call_gamma
+
+        X, Y = np.meshgrid(self.spot_range, self.vol_range)        
+        fig = plt.figure(figsize=(10, 8))        
+        ax = fig.add_subplot(111, projection = '3d')
+        surf = ax.plot_surface(X, Y, gamma_matrix, cmap='RdYlGn', edgecolor='k', alpha=1)
+       #ax.set_title('3D GAMMA Surface Plot')
+        ax.set_xlabel('Spot Price')
+        ax.set_ylabel('Volatility')
+        ax.set_zlabel('GAMMA')
+        fig.colorbar(surf, ax=ax, label = "GAMMA", shrink=0.5, aspect=5)
         return fig
 # Call the function  

@@ -142,7 +142,14 @@ with st.sidebar:
     st.markdown("-----")
     st.header("Heatmap Parameters")
         # Toggle for P&L Graph
-    PL_toggle_on = st.toggle("P/L Graph", value=False)
+
+    
+    PL_toggle_on = st.toggle("P/L Graph", value=False) 
+    Greek_toggle_on = st.toggle("Greeks Graph", value=False, disabled=PL_toggle_on)
+
+
+
+    
         # Utilize real time data (pending)
     if PL_toggle_on:
             C_buy = st.sidebar.number_input("Purchase Price of Call", min_value=0.0, value=5.0, step=0.1)
@@ -236,6 +243,16 @@ if PL_toggle_on:
         st.plotly_chart(pnl_3d_intsurface_fig, use_container_width=True)
     with col2:
         st.plotly_chart(delta_surface, use_container_width=True)
+
+elif Greek_toggle_on:
+    delta_surface = bs_model.delta_3d_surface()
+    gamma_surface = bs_model.gamma_3d_surface()
+    with col1:
+        st.subheader("Delta Surface Plot")
+        st.pyplot(delta_surface)
+    with col2:
+        st.subheader("Gamma Surface Plot")
+        st.pyplot(gamma_surface)
 
 else:
     fig_call, fig_put = bs_model.plot_heatmap()
