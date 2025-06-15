@@ -94,7 +94,7 @@ with st.sidebar:
 
     st.markdown("-----")
         
-    manualInput = st.toggle("Stock Ticker Input", value=True)
+    manualInput = st.toggle("Stock Ticker Input", value=False)
     if manualInput:
         
         st.header("Real-time Data Inputs")
