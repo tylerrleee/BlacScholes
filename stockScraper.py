@@ -12,7 +12,7 @@ from datetime import datetime
 class StockScraper:
     def __init__(self, ticker):
         self.ticker = ticker
-        self.url = f"https://finance.yahoo.com/quote/{ticker}/"
+        self.url = f"https://finance.yahoo.com/quote/{ticker}"
 
     def initialize_driver(self):
         # Use a real user agent string

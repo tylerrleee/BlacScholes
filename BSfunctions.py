@@ -68,6 +68,7 @@ class BlackScholes:
         return call_price, put_price
     
 
+
     def plot_heatmap(self):
         call_prices = np.zeros((len(self.vol_range), len(self.spot_range)))
         put_prices = np.zeros((len(self.vol_range), len(self.spot_range)))
@@ -231,7 +232,7 @@ class BlackScholes:
             colorbar=dict(title='P&L'),
         )])
         fig.update_layout(
-            title="3D P&L Surface Plot",
+            title="P&L Volatility Map",
             scene=dict(
                 xaxis_title='Spot Price (x)',
                 yaxis_title='Volatility (y)',
@@ -242,6 +243,76 @@ class BlackScholes:
         )
         return fig
     
+    def delta(self):
+        d1 = (
+            log(self.current_price / self.strike) +
+            (self.interest_rate + 0.5 * self.volatility ** 2) * self.time_to_maturity
+            ) / (
+                self.volatility * sqrt(self.time_to_maturity)
+            )
+        call_delta = norm.cdf(d1)
+        put_delta = 1 - norm.cdf(d1)
+        return call_delta, put_delta
+
+    def delta_3d_surface(self):
+        delta_matrix = np.zeros((len(self.vol_range), len(self.spot_range)))
+        for i, vol in enumerate(self.vol_range):
+            for j, spot in enumerate(self.spot_range):
+                bs_temp = BlackScholes(
+                    time_to_maturity=self.time_to_maturity,
+                    strike=self.strike,
+                    current_price=spot,
+                    volatility=vol,
+                    interest_rate=self.interest_rate,
+                    C_buy=self.C_buy,
+                    P_buy=self.P_buy
+                )
+                call_delta, put_delta = bs_temp.delta()
+                delta_matrix[i, j] = call_delta
+
+        X, Y = np.meshgrid(self.spot_range, self.vol_range)        
+        fig = plt.figure(figsize=(10, 8))        
+        ax = fig.add_subplot(111, projection = '3d')
+        surf = ax.plot_surface(X, Y, delta_matrix, cmap='RdYlGn', edgecolor='k', alpha=1)
+        ax.set_title('3D DELTA Surface Plot')
+        ax.set_xlabel('Spot Price')
+        ax.set_ylabel('Volatility')
+        ax.set_zlabel('DELTA')
+        fig.colorbar(surf, ax=ax, label = "DELTA", shrink=0.5, aspect=5)
+        return fig
     
-    
+    def delta_3d_interactive_surface(self):
+        delta_matrix = np.zeros((len(self.vol_range), len(self.spot_range)))
+        for i, vol in enumerate(self.vol_range):
+            for j, spot in enumerate(self.spot_range):
+                bs_temp = BlackScholes(
+                    time_to_maturity=self.time_to_maturity,
+                    strike=self.strike,
+                    current_price=spot,
+                    volatility=vol,
+                    interest_rate=self.interest_rate,
+                    C_buy=self.C_buy,
+                    P_buy=self.P_buy
+                )
+                call_delta, put_delta = bs_temp.delta()
+                delta_matrix[i, j] = call_delta
+
+        fig = go.Figure(data=[go.Surface(
+            z=delta_matrix,
+            x=self.spot_range,
+            y=self.vol_range,
+            colorscale='RdYlGn',
+            colorbar=dict(title='P&L'),
+        )])
+        fig.update_layout(
+            title="Delta Volatility Map",
+            scene=dict(
+                xaxis_title='Spot Price (x)',
+                yaxis_title='Volatility (y)',
+                zaxis_title='DELTA (z)'
+            ),
+            width=1000,
+            height=800
+        )
+        return fig
 # Call the function  

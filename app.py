@@ -227,21 +227,16 @@ st.markdown("")
 
     # Generate Heatmap
 if PL_toggle_on:
-    callpnl_heatmap_fig = bs_model.call_pnl_heatmap()
-    putpnl_heatmap_fig = bs_model.put_pnl_heatmap()
+    #callpnl_heatmap_fig = bs_model.call_pnl_heatmap()
+    #putpnl_heatmap_fig = bs_model.put_pnl_heatmap()
 
     pnl_3d_intsurface_fig = bs_model.pnl_3d_interactive_surface()
-
-    st.subheader("3D Price Heatmap")
-    st.plotly_chart(pnl_3d_intsurface_fig, use_container_width=True)
-    """
+    delta_surface = bs_model.delta_3d_interactive_surface()
     with col1:
-        st.subheader("P&L Heatmap (CALL)")
-        st.pyplot(callpnl_heatmap_fig)
+        st.plotly_chart(pnl_3d_intsurface_fig, use_container_width=True)
     with col2:
-        st.subheader("P&L Heatmap (PUT)")
-        st.pyplot(putpnl_heatmap_fig)
-"""
+        st.plotly_chart(delta_surface, use_container_width=True)
+
 else:
     fig_call, fig_put = bs_model.plot_heatmap()
     
