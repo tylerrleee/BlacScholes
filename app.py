@@ -146,8 +146,8 @@ with st.sidebar:
 
     st.markdown("-----")
     st.header("Visual Parameters")
-    PL_toggle_on = st.toggle("P/L Graph", value=False)
-    Greek_toggle_on = st.toggle("Greeks Graph", value=False)
+    PL_toggle_on = st.toggle("P/L Graph", value=True)
+    Greek_toggle_on = st.toggle("Greeks Graph", value=True)
 
     if PL_toggle_on:
         C_buy = st.sidebar.number_input("Purchase Price of Call", min_value=0.0, value=5.0, step=0.1)
