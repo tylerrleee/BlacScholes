@@ -15,8 +15,8 @@ class BlackScholes:
         current_price: float, # S
         volatility: float, # sigma
         interest_rate: float, # r
-        vol_range: np.ndarray = np.arange(0.1, 1.0, 0.1), 
-        spot_range: np.ndarray = np.arange(50, 150, 10),
+        vol_range: np.ndarray = None, 
+        spot_range: np.ndarray = None,
 
         C_buy: float = 0.0, # Call option purchase price
         P_buy: float = 0.0, # Put option purchase price

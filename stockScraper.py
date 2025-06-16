@@ -1,4 +1,3 @@
-import bs4 as BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -7,12 +6,14 @@ import time
 import random
 from selenium_stealth import stealth
 from datetime import datetime
+from bs4 import BeautifulSoup
 
 
 class StockScraper:
     def __init__(self, ticker):
         self.ticker = ticker
         self.url = f"https://finance.yahoo.com/quote/{ticker}"
+        self.info = {"Ticker": ticker, "current_price": None}
 
     def initialize_driver(self):
         # Use a real user agent string
@@ -40,44 +41,46 @@ class StockScraper:
 
     def fetch_info(self):
         driver = self.initialize_driver()
-        info = {}
+
         try:
             driver.get(self.url)
             time.sleep(5)  # Wait for the page to load completely
             html = driver.page_source
             soup = BeautifulSoup(html, "html.parser")
 
+
             # Current Price
             #price_span = soup.find("span", {"data-testid": "qsp-price"})
             price_span = soup.find("span", {"data-testid": "qsp-price"})
-
-            if price_span and price_span.text:
-                info['current_price'] = float(price_span.text.replace(',', ''))
+            if price_span:
+                self.info['current_price'] = float(price_span.text.replace(',', ''))
             else:
-                info['current_price'] = None
+                self.info['current_price'] = None
 
 
         except Exception as e:
             print(f"An error occurred with URL {self.url}: {e}")
-            info['current_price'] = None
+            self.info['current_price'] = None
 
         finally:
             driver.quit()
-            return info
+            return self.info
+        
     def get_spot_price(self):
         info = self.fetch_info()
         return info.get('current_price', None)
     
     def calculate_time_to_maturity(self, maturity_date_str):
-        today = datetime.today()
-        maturity_date = datetime.strptime(maturity_date_str, '%Y-%m-%d')
+        today = datetime.today().date()
+        maturity_date = datetime.strptime(maturity_date_str, '%Y-%m-%d').date()
         delta = maturity_date - today
-        return delta.days / 365.0  # Convert days to years | 1.0 = a year
+        return max(delta.days / 365.0, 0.0)  # Convert days to years | 1.0 = a year | return 0.0 if negative
 
 
 # Example usage:
 if __name__ == "__main__":
     apple = StockScraper("AAPL")
-    print(apple.fetch_info())
-    print(apple.calculate_time_to_maturity('2025-06-16'))
+
+    print(apple.calculate_time_to_maturity('2025-06-20'))
+    print((20-16)/365)
 
