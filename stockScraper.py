@@ -7,6 +7,8 @@ import random
 from selenium_stealth import stealth
 from datetime import datetime
 from bs4 import BeautifulSoup
+import yfinance as yf
+
 
 
 class StockScraper:
@@ -75,6 +77,10 @@ class StockScraper:
         maturity_date = datetime.strptime(maturity_date_str, '%Y-%m-%d').date()
         delta = maturity_date - today
         return max(delta.days / 365.0, 0.0)  # Convert days to years | 1.0 = a year | return 0.0 if negative
+    
+    def get_price_with_yf(self): 
+        ticker_obj = yf.Ticker(self.ticker)
+        return ticker_obj.info.get("regularMarketPrice")
 
 
 # Example usage:
@@ -82,5 +88,6 @@ if __name__ == "__main__":
     apple = StockScraper("AAPL")
 
     print(apple.calculate_time_to_maturity('2025-06-20'))
-    print((20-16)/365)
+    print(apple.get_spot_price())
+    print(apple.get_price_with_yf())
 

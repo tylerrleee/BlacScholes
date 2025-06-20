@@ -111,7 +111,7 @@ with st.sidebar:
         # Get current price from scraper if ticker is provided
         if ticker_symbol:
             try:
-                current_price = producer.get_spot_price()
+                current_price = producer.get_price_with_yf()
                 if current_price is None or np.isnan(current_price):
                     error_msg = "Could not fetch price for this ticker."
                     current_price = 100.0  # fallback
