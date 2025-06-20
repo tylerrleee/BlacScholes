@@ -1,5 +1,5 @@
 # Black-Scholes Options Pricing Dashboard 
-An interactive Streamlit dashboard that visualizes European call and put option prices under the Black-Scholes model. Users can tweak key inputs (spot price, strike, volatility, risk-free rate, time to maturity) and immediately see pricing heatmaps and P/L surfaces :contentReference[oaicite:0]{index=0}.
+An interactive Streamlit dashboard that visualizes European call and put option prices under the Black-Scholes model. Users can tweak key inputs (spot price, strike, volatility, risk-free rate, time to maturity) and immediately see pricing heatmaps and P/L surfaces 
 
 [🔗 Live Website](https://tleblackschole.streamlit.app)
 
