@@ -17,4 +17,3 @@ I built this project to deepen my understanding of quantitative finance, Python-
 
 ---
 
-This project was used to visualize a variety of parameters for the Black Scholes Pricing Model. 
